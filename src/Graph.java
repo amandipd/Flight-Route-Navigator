@@ -1,135 +1,89 @@
 package src;
 
-import java.util.Calendar;
 import java.util.HashMap;
 import java.util.HashSet;
-
-import com.mxgraph.model.mxGraphModel;
-import com.mxgraph.view.mxGraph;
-import com.mxgraph.swing.mxGraphComponent;
-import javax.swing.*;
-
+import java.io.File;
+import java.util.Scanner;
+import java.io.FileNotFoundException;
 
 public class Graph {
-    private final int numVertices;
 
-    /**
-     * Creates a HashMap, mapping an integer vertex to a set of edges,
-     * which contains weights and vertices for adjacent vertices.
-     */
-    private HashMap<Integer, HashSet<Edge>> graph;
+    private HashMap<String, HashSet<Edge>> airportGraph; // Graph containing airports as vertices, edge weights as distances
+    private HashMap<Integer, String>  airportIdToString;
+    private HashMap<String, HashSet<Integer>> airportStringToId; // Handling if an airport has multiple ids.
+    private HashSet<Integer> allAiportIds;
 
+    public Graph (String airportIds, String airportDist) throws FileNotFoundException {
+        airportGraph = new HashMap<>();
+        airportIdToString = new HashMap<>();
+        airportStringToId = new HashMap<>();
+        allAiportIds = new HashSet<>();
 
-    public Graph (int numVertices) {
-        this.numVertices = numVertices;
-        graph = new HashMap<>();
-        for (int i = 0; i < numVertices; i++) {
-            graph.put(i, new HashSet<>());
+        File aiportIdObj = new File(airportIds);
+        File airportDists = new File(airportDist);
+
+        Scanner idReader = new Scanner(aiportIdObj);
+        Scanner distReader = new Scanner(airportDists);
+
+        while(idReader.hasNextLine()) { // Reading airport_ids.csv
+            String data = idReader.nextLine();
+            String[] currLine = data.split("\",\"");
+            int airportId = Integer.parseInt(currLine[0].substring(1));
+            String airportName = currLine[1].substring(0, currLine[1].length() - 1);
+            airportIdToString.put(airportId, airportName);
+            airportStringToId.computeIfAbsent(airportName, k -> new HashSet<>());
+            airportStringToId.get(airportName).add(airportId);
+            allAiportIds.add(airportId);
+        }
+
+        while(distReader.hasNextLine()) { // Reading airport_distances.csv
+            String data = distReader.nextLine();
+            String[] currLine = data.split(",");
+            String startAirport = airportIdToString.get(Integer.parseInt(currLine[1]));
+            String destinationAirport = airportIdToString.get(Integer.parseInt(currLine[1]));
+            int distance = Integer.parseInt(currLine[4]);
+            addEdge(startAirport, destinationAirport, distance);
         }
     }
 
-    /**
-     * Adds an edge between two vertices.
-     */
-    public void addEdge(int source, int target, int weight) {
-        assert source >= 0 && source < graph.size() : "Invalid source index: " + source;
-        assert target >= 0 && target < graph.size() : "Invalid destination index: " + target;
-        graph.get(source).add(new Edge (target, weight));
+    public void addEdge(String source, String target, int weight) {
+        assert source != null: "Invalid source index: " + source;
+        assert target != null: "Invalid destination index: " + target;
+        airportGraph.computeIfAbsent(source, k -> new HashSet<>());
+        airportGraph.get(source).add(new Edge (target, weight));
     }
 
-    /**
-     * Generates a string representation of the graph containing all vertices and their adjacent vertices.
-     * Each vertex is listed along with its adjacent vertex and their corresponding weights.
-     * If a vertex has no adjacent vertices, it is indicated as "None".
-     * @return A string representation of the graph.
-     */
-    public void stringGraph() {
-        String allVerticesAndEdges = "";
-        for (Integer currVertex : graph.keySet()) {
-            String currentLine = "";
-            currentLine += "Vertex: [" + currVertex + "] | Adjacent Vertices: ";
-            if ((graph.get(currVertex).isEmpty())) {
-                currentLine += "None  ";
-            } else {
-                for (Edge currEdge : graph.get(currVertex)) {
-                    currentLine += "[" + currEdge.target + ", Weight: " + currEdge.weight + "], ";
-                } 
-            }
-            currentLine = currentLine.substring(0, currentLine.length() - 2);
-            allVerticesAndEdges += currentLine + "\n";
-        }
-        System.out.print(allVerticesAndEdges);
+    public HashMap<String, HashSet<Edge>> getGraph() {
+        return airportGraph;
     }
 
-    /**
-     * Generates a visual representation of a Graph in a grid-like pattern.
-     */
-    public void visualizeGraph() {
-        mxGraph visualizationGraph = new mxGraph();
-        Object parent = visualizationGraph.getDefaultParent();
-
-        visualizationGraph.getModel().beginUpdate();
-        try {
-            HashMap<Integer, Object> vertexMap = new HashMap<>();
-            int numVertices = this.graph.size();
-            int cols = (int) Math.ceil(Math.sqrt(numVertices));
-            int rows = (int) Math.ceil((double) numVertices / cols);
-            int vertexSpacingX = 100; // Adjusts horizontal spacing between vertices.
-            int vertexSpacingY = 100; // Adjusts vertical spacing between vertices.
-
-            // Inserts vertices in a grid-like pattern.
-            for (Integer vertex : this.graph.keySet()) {
-                int colIndex = vertex % cols;
-                int rowIndex = vertex / cols;
-                int x = 50 + colIndex * vertexSpacingX;
-                int y = 50 + rowIndex * vertexSpacingY;
-                Object v = visualizationGraph.insertVertex(parent, null, vertex.toString(), x, y, 40, 40);
-                vertexMap.put(vertex, v);
-            }
-
-            // Inserts edges.
-            for (Integer vertex : this.graph.keySet()) {
-                Object sourceVertex = vertexMap.get(vertex);
-                for (Edge edge : this.graph.get(vertex)) {
-                    Object targetVertex = vertexMap.get(edge.target);
-                    visualizationGraph.insertEdge(parent, null, edge.weight, sourceVertex, targetVertex);
-                }
-            }
-        } finally {
-            visualizationGraph.getModel().endUpdate();
-        }
-
-        mxGraphComponent graphComponent = new mxGraphComponent(visualizationGraph);
-        JFrame frame = new JFrame("Graph Visualization");
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.getContentPane().add(graphComponent);
-        frame.pack();
-        frame.setVisible(true);
+    public HashMap<Integer, String> getAirportIdToString() {
+        return airportIdToString;
     }
 
-    public int getNumVertices() {
-        return numVertices;
+    public HashMap<String, HashSet<Integer>> getairportStringToId() {
+        return airportStringToId;
     }
 
-    public HashMap<Integer, HashSet<Edge>> getGraph() {
-        return graph;
+    public boolean contains(int iD) {
+
     }
 
     class Edge {
-        private final int target;
+        private final String target;
         private final int weight;
-        public Edge(int target, int weight) {
+        public Edge(String target, int weight) {
             assert weight >= 0 : "Invalid weight: " + weight;
-            assert target >= 0 && target < numVertices: "Invalid target: " + target;
+            assert target != null : "Invalid target: " + target;
             this.target = target;
-            this.weight = weight;
+            this.weight = (int) weight;
         }
 
         public int getWeight() {
             return weight;
         }
 
-        public int getTarget() {
+        public String getTarget() {
             return target;
         }
     }
