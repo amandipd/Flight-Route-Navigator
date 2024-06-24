@@ -1,8 +1,8 @@
 package src;
 
 import java.io.FileNotFoundException;
-import java.util.HashMap;
-import java.util.Random;
+import java.util.Scanner;
+import java.util.Set;
 
 public class Main {
 
@@ -10,45 +10,57 @@ public class Main {
         String airportIds = "data/airport_ids.csv";
         String airportDistances = "data/airport_distances.csv";
         Graph graph = new Graph(airportIds, airportDistances);
-        graph.visualizeGraph();
-        /*graph.addEdge(0, 1, 4);
-        graph.addEdge(0, 2,2);
-        graph.addEdge(1,2,3);
-        graph.addEdge(2,1,1);
-        graph.addEdge(1,3,2);
-        graph.addEdge(2,4,5);
-        graph.addEdge(2,3,4);
-        graph.addEdge(1,4,3);
-        graph.addEdge(4,3, 1);*/
-
-        //Dijkstras dijGraph = new Dijkstras(graph);
-        //graph.visualizeGraph();
-    }
-
-    /**
-     * Creates a randomized graph between a minimum number of vertices (inclusive)
-     * and a maximum number of vertices (exclusive).
-     */
-    /*public static Graph createRandomGraph(int minVertexCount, int maxVertexCount, int maxWeight, int maxEdgesPerVertex) {
-        Random random = new Random();
-        int numOfVertices = getRandomIntegerInRange(random,  minVertexCount, maxVertexCount);
-        Graph graph = new Graph(numOfVertices);
-
-        for (int i = 0; i < numOfVertices; i++) {
-            for (int j = 0; j < maxEdgesPerVertex; j++) {
-                int target = random.nextInt(numOfVertices);
-                int weight = random.nextInt(maxWeight);
-                graph.addEdge(i, target, weight);
-            }
+        ShortestPath path = new ShortestPath(graph);
+        Scanner stringScanner = new Scanner(System.in);
+        String departureAirport = getDeparture(stringScanner, graph);
+        String arrivalAirport = getArrival(stringScanner, graph);
+        path.dijkstra(departureAirport, arrivalAirport);
+        System.out.println("\n" + "Enter 2 to enter new arrival and departure airports.");
+        String input = stringScanner.nextLine().trim();
+        while (input.equals("2")) {
+            departureAirport = getDeparture(stringScanner, graph);
+            arrivalAirport = getArrival(stringScanner, graph);
+            path.dijkstra(departureAirport, arrivalAirport);
+            System.out.println("\n" + "Enter 2 to enter new arrival and departure airports.");
+            input = stringScanner.nextLine().trim();
         }
-        return graph;
     }
 
-    /**
-     * Generates a random number between minimum (inclusive) and maximum (exclusive).
-     */
-    /* public static int getRandomIntegerInRange(Random random, int lower, int upper) {
-        return random.nextInt(upper - lower) + lower;
-    } */
+    public static String getDeparture(Scanner stringScanner, Graph graph) {
+        System.out.println("Please enter your departure airport: Enter 1 if you'd like to see a list of all airports." + "\n");
+        String departure = stringScanner.nextLine().trim();
+        Set<String> airportList = graph.getAirportStringToId().keySet();
 
+        if (departure.equals("1")) {
+            for (String airport : airportList) {
+                System.out.println(airport);
+            }
+            System.out.println("\n" + "Please enter your departure airport:" + "\n");
+            departure = stringScanner.nextLine().trim();
+        }
+        while (!airportList.contains(departure)) {
+            System.out.println("The departure airport you entered is not found. Please enter a valid departure airport.");
+            departure = stringScanner.nextLine().trim();
+        }
+        return departure;
+    }
+
+    public static String getArrival(Scanner stringScanner, Graph graph) {
+        System.out.println("\n" + "Please enter your arrival airport: Enter 1 if you'd like to see a list of all airports." + "\n");
+        String arrival = stringScanner.nextLine().trim();
+        Set<String> airportList = graph.getAirportStringToId().keySet();
+
+        if (arrival.equals("1")) {
+            for (String airport : airportList) {
+                System.out.println(airport);
+            }
+            System.out.println("\n" + "Please enter your arrival airport:" + "\n");
+            arrival = stringScanner.nextLine().trim();
+        }
+        while (!airportList.contains(arrival)) {
+            System.out.println("The arrival airport you entered is not found. Please enter a valid arrival airport.");
+            arrival = stringScanner.nextLine().trim();
+        }
+        return arrival;
+    }
 }

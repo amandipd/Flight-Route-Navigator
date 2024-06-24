@@ -18,7 +18,6 @@ public class Graph {
         airportIdToString = new HashMap<>();
         airportStringToId = new HashMap<>();
         allAiportIds = new HashSet<>();
-
         File aiportIdObj = new File(airportIds);
         File airportDists = new File(airportDist);
 
@@ -40,8 +39,8 @@ public class Graph {
             String data = distReader.nextLine();
             String[] currLine = data.split(",");
             String startAirport = airportIdToString.get(Integer.parseInt(currLine[1]));
-            String destinationAirport = airportIdToString.get(Integer.parseInt(currLine[1]));
-            int distance = Integer.parseInt(currLine[4]);
+            String destinationAirport = airportIdToString.get(Integer.parseInt(currLine[3]));
+            int distance = (int) Double.parseDouble(currLine[4]);
             addEdge(startAirport, destinationAirport, distance);
         }
     }
@@ -53,20 +52,16 @@ public class Graph {
         airportGraph.get(source).add(new Edge (target, weight));
     }
 
-    public HashMap<String, HashSet<Edge>> getGraph() {
-        return airportGraph;
-    }
-
     public HashMap<Integer, String> getAirportIdToString() {
         return airportIdToString;
     }
 
-    public HashMap<String, HashSet<Integer>> getairportStringToId() {
+    public HashMap<String, HashSet<Integer>> getAirportStringToId() {
         return airportStringToId;
     }
 
-    public boolean contains(int iD) {
-
+    public HashMap<String, HashSet<Edge>> getAirportGraph() {
+        return airportGraph;
     }
 
     class Edge {

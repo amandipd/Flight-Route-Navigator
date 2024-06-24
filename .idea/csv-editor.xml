@@ -17,6 +17,13 @@
             </Attribute>
           </value>
         </entry>
+        <entry key="\out\production\Djikstras-Algorithm-Analysis\data\airport_ids.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
       </map>
     </option>
   </component>
